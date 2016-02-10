@@ -7,7 +7,7 @@ from contextlib import contextmanager
 
 import message
 
-HOST = '127.0.0.1'
+HOST = '192.168.2.249'
 PORT = 50007
 
 @contextmanager

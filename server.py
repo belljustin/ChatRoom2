@@ -1,12 +1,15 @@
 import socket
 import thread
 import select
+import logging
 from contextlib import contextmanager
 from Queue import Queue
 
 import message
 
-HOST = '127.0.0.1'
+logging.basicConfig(filename="log_server.log",level=logging.DEBUG, format='%(asctime)s %(message)s')
+
+HOST = ''
 PORT = 50007
 
 connected_sockets = list()
@@ -23,7 +26,7 @@ def socketcontext(*args, **kw):
 def accept_connection(server):
     conn, addr = server.accept()
     connected_sockets.append(conn)
-    print 'Connected by', addr
+    logging.info('Connected by ' + str(addr))
 
 def broadcast_messages(server):
     while not message_queue.empty():
@@ -47,10 +50,10 @@ def serve_chat():
                     try:
                         msg = message.recieve_msg(s)
                         message_queue.put(msg)
-                        print("Msg recieved", msg[1])
+                        logging.info("Msg recieved: " + msg[1])
                     except:
                         connected_sockets.remove(s)
-                        print("Disconnected from:", s)
+                        logging.info("Disconnected from: " + str(s))
             broadcast_messages(server)
 
 serve_chat()
