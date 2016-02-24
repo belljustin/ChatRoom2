@@ -1,3 +1,4 @@
+import sys
 import socket
 import thread
 import select
@@ -9,7 +10,16 @@ import message
 
 logging.basicConfig(filename="log_server.log",level=logging.DEBUG, format='%(asctime)s %(message)s')
 
-HOST = ''
+root = logging.getLogger()
+root.setLevel(logging.DEBUG)
+
+ch = logging.StreamHandler(sys.stdout)
+ch.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+ch.setFormatter(formatter)
+root.addHandler(ch)
+
+HOST = '127.0.0.1'
 PORT = 50007
 
 connected_sockets = list()
@@ -30,10 +40,10 @@ def accept_connection(server):
 
 def broadcast_messages(server):
     while not message_queue.empty():
-        size, content = message_queue.get()
+        username, content = message_queue.get()
         for s in connected_sockets:
             if s != server:
-                message.send_msg(s, content)
+                message.send_msg(s, username, content)
 
 def serve_chat():
     with socketcontext(socket.AF_INET, socket.SOCK_STREAM) as server:
@@ -50,7 +60,7 @@ def serve_chat():
                     try:
                         msg = message.recieve_msg(s)
                         message_queue.put(msg)
-                        logging.info("Msg recieved: " + msg[1])
+                        logging.info("Msg recieved from: " + msg[0])
                     except:
                         connected_sockets.remove(s)
                         logging.info("Disconnected from: " + str(s))
