@@ -5,7 +5,10 @@ import thread
 import select
 from contextlib import contextmanager
 
+from Tkinter import *
+
 import message
+from chatbox import Chatbox
 
 HOST = '127.0.0.1'
 PORT = 50007
@@ -19,24 +22,26 @@ def socketcontext(*args, **kw):
         s.close()
 
 def start_client():
+    master = Tk()
+    master.geometry("300x200+300+300")
+
     with socketcontext(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.connect((HOST, PORT))
-        thread.start_new_thread(post_listener, (s,))
-        username = raw_input("Provide a username: ")
-        while True:
-            msg = raw_input()
-            message.send_msg(s, username, msg)
+        chatbox = Chatbox(master, s)
+        thread.start_new_thread(post_listener, (s,chatbox))
 
-def post_listener(sock):
+        chatbox.pack()
+        mainloop()
+
+def post_listener(sock, view):
     while True:
         ready_to_read, ready_to_write, in_error = \
             select.select([sock], [], [])
         for s in ready_to_read:
             try:
                 username, msg = message.recieve_msg(s)
-                print("\r" + username + ": " + msg, end="\n")
+                view.write(username, msg)
             except:
-                print("\rConnection with server was lost")
                 raise Exception
                 return
 
